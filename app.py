@@ -2,7 +2,7 @@ import zipfile
 import os
 
 zip_path = 'ThousandVoicesOfTrauma.zip'
-extract_to = 'data/ptsd_dataset.csv'
+extract_to = 'ptsd_dataset.csv'
 
 if zipfile.is_zipfile(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
