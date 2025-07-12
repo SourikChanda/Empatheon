@@ -1,95 +1,57 @@
-import streamlit as st 
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+
+class PTSDChatbot:
+    def __init__(self):
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')  # Lightweight yet effective
+        self.index = None
+        self.questions = []
+        self.answers = []
+
+    def train(self, questions, answers):
+        self.questions = questions
+        self.answers = answers
+        embeddings = self.model.encode(questions, convert_to_tensor=False)
+        self.index = faiss.IndexFlatL2(len(embeddings[0]))
+        self.index.add(np.array(embeddings).astype('float32'))
+
+    def get_response(self, user_input):
+        query_embedding = self.model.encode([user_input])[0].astype('float32')
+        D, I = self.index.search(np.array([query_embedding]), k=1)
+        return self.answers[I[0][0]]
 import pandas as pd
-import requests
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils import shuffle
 
-st.set_page_config(page_title="AgriGuru Lite", layout="centered")
+def load_and_preprocess_data(path):
+    df = pd.read_csv(path)
+    df = df.dropna()
+    df = shuffle(df).reset_index(drop=True)
 
-st.title("🌾 AgriGuru Lite – Smart Farming Assistant")
+    # Data augmentation: simple paraphrasing (optional)
+    # You could add paraphrased versions here manually or use a paraphrasing model
 
-# ---------------- WEATHER FORECAST ----------------
-st.subheader("🌦️ 5-Day Weather Forecast")
-api_key = "0a16832edf4445ce698396f2fa890ddd"  # Replace with your OpenWeatherMap API Key
+    questions = df['question'].tolist()
+    responses = df['response'].tolist()
+    return questions, responses
+import streamlit as st
+from model.chatbot_model import PTSDChatbot
+from utils.preprocess import load_and_preprocess_data
 
-location = st.text_input("Enter your City/District (for weather)")
+@st.cache_resource
+def load_chatbot():
+    questions, responses = load_and_preprocess_data('data/ptsd_dataset.csv')
+    bot = PTSDChatbot()
+    bot.train(questions, responses)
+    return bot
 
-def get_weather(city):
-    url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
-    res = requests.get(url)
-    if res.status_code == 200:
-        return res.json()['list'][:5]
-    return None
+st.set_page_config(page_title="PTSD Support Chatbot", layout="centered")
+st.title("🧠 PTSD Support Chatbot")
+st.markdown("This chatbot provides support for PTSD-related concerns. Type your concern below.")
 
-if location:
-    forecast = get_weather(location)
-    if forecast:
-        for day in forecast:
-            st.write(f"{day['dt_txt']} | 🌡️ {day['main']['temp']}°C | {day['weather'][0]['description']}")
-    else:
-        st.warning("Couldn't fetch weather. Please check the city name.")
+chatbot = load_chatbot()
+user_input = st.text_input("You:", "")
 
-# ---------------- RULE-BASED CROP RECOMMENDATION ----------------
-st.subheader("🧠 Rule-Based Crop Recommendation")
-
-season = st.selectbox("Select the Crop Season", ["Kharif", "Rabi", "Zaid"])
-soil = st.selectbox("Select Soil Type", ["Alluvial", "Black", "Red", "Laterite", "Sandy", "Clayey"])
-
-def recommend_crops(season, soil):
-    if season == "Kharif" and soil == "Alluvial":
-        return ["Paddy", "Maize", "Jute"]
-    elif season == "Rabi" and soil == "Black":
-        return ["Wheat", "Barley", "Gram"]
-    elif season == "Zaid":
-        return ["Watermelon", "Cucumber", "Bitter Gourd"]
-    else:
-        return ["Millets", "Pulses", "Sunflower"]
-
-if season and soil:
-    rule_based = recommend_crops(season, soil)
-    st.success("Recommended Crops: " + ", ".join(rule_based))
-
-# ---------------- ML-BASED CROP RECOMMENDATION ----------------
-st.subheader("🤖 ML-Based Crop Recommendation (via CSV + Random Forest)")
-
-@st.cache_data
-def load_crop_data():
-    return pd.read_csv("Crop_recommendation.csv")
-
-df = load_crop_data()
-
-X = df.drop("label", axis=1)
-y = df["label"]
-
-model = RandomForestClassifier()
-model.fit(X, y)
-
-# Crop-to-Season Mapping
-crop_seasons = {
-    "rice": "Kharif", "maize": "Kharif", "jute": "Kharif", "cotton": "Kharif",
-    "kidneybeans": "Kharif", "pigeonpeas": "Kharif", "blackgram": "Kharif", 
-    "mothbeans": "Kharif", "mungbean": "Kharif",
-
-    "wheat": "Rabi", "gram": "Rabi", "lentil": "Rabi", "chickpea": "Rabi",
-    "grapes": "Rabi", "apple": "Rabi", "orange": "Rabi", "pomegranate": "Rabi",
-
-    "watermelon": "Zaid", "muskmelon": "Zaid", "cucumber": "Zaid",
-
-    "banana": "All Season", "mango": "All Season", "papaya": "All Season",
-    "coconut": "All Season", "coffee": "All Season"
-}
-
-st.markdown("**Enter Soil and Climate Data for ML Prediction**")
-n = st.number_input("Nitrogen (N)", min_value=0.0)
-p = st.number_input("Phosphorus (P)", min_value=0.0)
-k = st.number_input("Potassium (K)", min_value=0.0)
-temp = st.number_input("Temperature (°C)", min_value=0.0)
-humidity = st.number_input("Humidity (%)", min_value=0.0)
-ph = st.number_input("Soil pH", min_value=0.0)
-rainfall = st.number_input("Rainfall (mm)", min_value=0.0)
-
-if st.button("Predict Best Crop"):
-    input_data = [[n, p, k, temp, humidity, ph, rainfall]]
-    prediction = model.predict(input_data)
-    predicted_crop = prediction[0]
-    season = crop_seasons.get(predicted_crop, "Unknown")
-    st.success(f"🌱 Predicted Crop: **{predicted_crop}** ({season} season)")
+if user_input:
+    response = chatbot.get_response(user_input)
+    st.markdown(f"**Bot:** {response}")
