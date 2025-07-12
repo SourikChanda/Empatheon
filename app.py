@@ -8,12 +8,18 @@ import numpy as np
 import streamlit as st
 
 # --- UNZIP dataset if not already done ---
+
+
 zip_path = 'ThousandVoicesOfTrauma.zip'
 extract_to = 'data/'
+
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    print("ZIP file contains:", zip_ref.namelist())
 
 if zipfile.is_zipfile(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
+
 
 # --- LOAD and Preprocess Dataset ---
 def load_and_preprocess_data(path):
