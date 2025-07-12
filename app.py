@@ -1,23 +1,33 @@
 import zipfile
 import os
+import pandas as pd
+from sklearn.utils import shuffle
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+import streamlit as st
 
+# --- UNZIP dataset if not already done ---
 zip_path = 'ThousandVoicesOfTrauma.zip'
-extract_to = 'ptsd_dataset.csv'
+extract_to = 'data/'
 
 if zipfile.is_zipfile(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
-import pandas as pd
 
-df = pd.read_csv('data/ptsd_dataset.csv')
+# --- LOAD and Preprocess Dataset ---
+def load_and_preprocess_data(path):
+    df = pd.read_csv(path)
+    df = df.dropna()
+    df = shuffle(df).reset_index(drop=True)
+    questions = df['question'].tolist()
+    responses = df['response'].tolist()
+    return questions, responses
 
-from sentence_transformers import SentenceTransformer
-import faiss
-import numpy as np
-
+# --- PTSDChatbot Model Class ---
 class PTSDChatbot:
     def __init__(self):
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')  # Lightweight yet effective
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.index = None
         self.questions = []
         self.answers = []
@@ -33,27 +43,12 @@ class PTSDChatbot:
         query_embedding = self.model.encode([user_input])[0].astype('float32')
         D, I = self.index.search(np.array([query_embedding]), k=1)
         return self.answers[I[0][0]]
-import pandas as pd
-from sklearn.utils import shuffle
 
-def load_and_preprocess_data(path):
-    df = pd.read_csv(path)
-    df = df.dropna()
-    df = shuffle(df).reset_index(drop=True)
-
-    # Data augmentation: simple paraphrasing (optional)
-    # You could add paraphrased versions here manually or use a paraphrasing model
-
-    questions = df['question'].tolist()
-    responses = df['response'].tolist()
-    return questions, responses
-import streamlit as st
-from model.chatbot_model import PTSDChatbot
-from utils.preprocess import load_and_preprocess_data
-
+# --- STREAMLIT APP ---
 @st.cache_resource
 def load_chatbot():
-    questions, responses = load_and_preprocess_data('data/ptsd_dataset.csv')
+    csv_path = os.path.join(extract_to, 'ptsd_dataset.csv')
+    questions, responses = load_and_preprocess_data(csv_path)
     bot = PTSDChatbot()
     bot.train(questions, responses)
     return bot
