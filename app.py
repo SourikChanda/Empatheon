@@ -8,17 +8,21 @@ import numpy as np
 import streamlit as st
 
 # --- UNZIP dataset if not already done ---
-
+import os
+import zipfile
 
 zip_path = 'ThousandVoicesOfTrauma.zip'
 extract_to = 'data/'
 
-with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-    print("ZIP file contains:", zip_ref.namelist())
+# Create target folder if it doesn't exist
+os.makedirs(extract_to, exist_ok=True)
 
+# Unzip to the data folder
 if zipfile.is_zipfile(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
+ df = pd.read_csv('data/ptsd_dataset.csv')
+
 
 
 # --- LOAD and Preprocess Dataset ---
