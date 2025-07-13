@@ -1,0 +1,11 @@
+id,age,gender,trauma_type,narrative,PTSD_score,therapy_type,response_to_therapy
+1,25,Female,Domestic Violence,I felt isolated and scared every day.,72,CBT,Improving
+2,34,Male,War Experience,The explosions still echo in my dreams.,85,EMDR,Stable
+3,19,Female,Sexual Assault,I couldn't talk about it for years.,90,CBT,Improving
+4,45,Male,Natural Disaster,The flood took everything from us.,65,Group Therapy,Not improving
+5,29,Female,Emotional Neglect,They never noticed I was suffering.,60,CBT,Improving
+6,38,Male,Childhood Abuse,It still haunts my relationships.,88,Trauma-Focused CBT,Stable
+7,50,Female,Car Accident,The crash changed my life forever.,70,CBT,Improving
+8,22,Non-binary,Bullying,They tormented me every day at school.,55,Counseling,Not improving
+9,41,Male,Loss of Parent,He was everything to me.,80,Psychodynamic,Improving
+10,33,Female,Medical Trauma,Waking up from surgery was terrifying.,67,CBT,Stable
