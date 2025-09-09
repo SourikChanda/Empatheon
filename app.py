@@ -76,8 +76,10 @@ def load_and_preprocess_data(path):
 class PTSDChatbot:
     def __init__(self):
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
-@@ -84,24 +40,27 @@ def get_response(self, user_input):
-        D, I = self.index.search(np.array([query_embedding]), k=1)
+
+    def get_response(self, user_input):
+        query_embedding = self.model.encode([user_input], convert_to_numpy=True)
+        D, I = self.index.search(np.array(query_embedding), k=1)
         return self.answers[I[0][0]]
 
 # --- Step 4: Streamlit UI ---
