@@ -104,9 +104,9 @@ def load_chatbot():
     bot.train(questions, responses)
     return bot
 
+# Load chatbot
 chatbot = load_chatbot()
 
-    chatbot = load_chatbot()
 if chatbot:
     user_input = st.text_input("You:", "")
 
@@ -116,3 +116,4 @@ if chatbot:
 else:
     st.error("Cannot proceed without a valid dataset.")
     st.warning("⚠️ Chatbot could not be loaded. Please check your dataset file location and format.")
+
