@@ -8,11 +8,11 @@ import numpy as np
 import streamlit as st
 
 # --- Paths ---
-zip_path = 'ThousandVoicesOfTrauma.zip'
+zip_path = 'thousand_voices_of_trauma.zip'
 extract_to = 'data/'
 csv_path = os.path.join(extract_to, 'dataset.csv')
 # --- CSV is in the root directory ---
-CSV_PATH = 'ThousandVoicesOfTrauma.csv'
+CSV_PATH = 'thousand_voices_of_trauma.csv'
 
 os.makedirs(extract_to, exist_ok=True)
 
